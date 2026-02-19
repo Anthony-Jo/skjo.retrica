@@ -61,4 +61,12 @@ dependencies {
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
+
+    // CameraX - 추가할 라이브러리
+    val cameraxVersion = "1.3.1" // 최신 안정 버전을 명시적으로 관리
+    implementation("androidx.camera:camera-core:${cameraxVersion}")
+    implementation("androidx.camera:camera-camera2:${cameraxVersion}") // Camera2 구현체를 사용
+    implementation("androidx.camera:camera-lifecycle:${cameraxVersion}") // 생명주기 관리를 위해 필수
+    implementation("androidx.camera:camera-view:${cameraxVersion}") // PreviewView 사용을 위해
+    implementation("androidx.camera:camera-extensions:${cameraxVersion}") // (선택사항) 보케, HDR 등 추가 기능
 }
