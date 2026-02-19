@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         viewModel.data.observe(this) {
-            binding.textView.text = it
+            binding.tvFps.text = it
         }
 
         viewModel.fetchData()

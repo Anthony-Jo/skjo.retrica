@@ -4,16 +4,59 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:background="@android:color/black"
+    tools:context=".ui.MainActivity">
 
+    <!-- CameraX의 미리보기를 표시할 View -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/layoutPreviewView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="3:4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:scaleType="fillStart" />
+
+    <!-- 필터가 적용된 결과를 보여줄 ImageView. PreviewView 위에 겹쳐서 표시 -->
+    <ImageView
+        android:id="@+id/ivFiltered"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="@id/layoutPreviewView"
+        app:layout_constraintEnd_toEndOf="@id/layoutPreviewView"
+        app:layout_constraintStart_toStartOf="@id/layoutPreviewView"
+        app:layout_constraintTop_toTopOf="@id/layoutPreviewView" />
+
+    <!-- 실시간 FPS(Frame Per Second)를 표시할 TextView -->
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/tvFps"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
+        android:layout_margin="16dp"
+        android:background="#80000000"
+        android:padding="8dp"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="FPS: 60.0" />
+
+    <!-- 필터 선택 등을 위한 UI 영역 (지금은 비워둠) -->
+    <LinearLayout
+        android:id="@+id/layoutBtn"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:padding="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/layoutPreviewView">
+
+        <!-- 여기에 나중에 필터 선택 버튼이나 RecyclerView 등을 추가할 수 있습니다. -->
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
