@@ -11,7 +11,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     override fun getViewBinding() = ActivityMainBinding.inflate(layoutInflater)
 
-    override fun init() {
+    override fun initView() {
         viewModel.data.observe(this) {
             binding.tvFps.text = it
         }
