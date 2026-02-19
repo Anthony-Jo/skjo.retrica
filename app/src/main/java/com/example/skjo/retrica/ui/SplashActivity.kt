@@ -1,111 +1,87 @@
 package com.example.skjo.retrica.ui
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.provider.Settings
-import androidx.appcompat.app.AlertDialog
-import androidx.core.app.ActivityCompat
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.example.skjo.retrica.databinding.ActivitySplashBinding
 
+@SuppressLint("CustomSplashScreen")
 class SplashActivity : BaseActivity<ActivitySplashBinding>() {
 
+    /**
+     * main 이동 전 delay 2000ms
+     */
     private var handler: Handler? = null
-    private var isResumedAfterPermissionRequest = false
 
-    private val PERMISSIONS_REQUEST_CODE = 100
-    private val REQUIRED_PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    /**
+     * 필수 권한 list
+     */
+    private val requiredPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         arrayOf(Manifest.permission.CAMERA)
     } else {
         arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
 
-    override fun getViewBinding() = ActivitySplashBinding.inflate(layoutInflater)
+    private val permissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            if (permissions.values.all { it }) {
+                // 모든 권한이 승인됨
+                startMainWithDelay()
+            } else {
+                // 권한이 하나라도 거부됨
+                showPermissionDeniedDialog()
+            }
+        }
 
-    override fun init() {
-        // 초기화 로직은 onResume에서 처리
-    }
+    override fun getViewBinding() = ActivitySplashBinding.inflate(layoutInflater)
+    override fun initView() = Unit
 
     override fun onResume() {
         super.onResume()
-        // 설정 화면에서 돌아오거나, 권한 요청 후 onResume이 호출될 때만 로직 실행
-        if (isResumedAfterPermissionRequest) {
-            checkPermissionsAndProceed()
-        } else {
-             checkPermissionsAndProceed()
-        }
+        checkPermissionsAndProceed()
     }
 
     override fun onPause() {
         super.onPause()
         handler?.removeCallbacksAndMessages(null)
-        isResumedAfterPermissionRequest = false
     }
 
     private fun checkPermissionsAndProceed() {
-        if (hasPermissions()) {
+        if (hasAllPermissions()) {
+            // 모든 권한이 있다면, 메인 액티비티로 이동합니다.
             startMainWithDelay()
         } else {
-             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
-                showPermissionDeniedDialog()
-            } else {
-                ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST_CODE)
-            }
+            // 권한이 하나라도 없다면, 권한을 요청합니다.
+            permissionLauncher.launch(requiredPermissions)
         }
     }
 
-    private fun hasPermissions(): Boolean {
-        for (permission in REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                return false
-            }
+    /**
+     * 필수 권한 여부 check
+     */
+    private fun hasAllPermissions(): Boolean {
+        return requiredPermissions.all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
-        return true
     }
 
+    /**
+     * start Main activity
+     */
     private fun startMainWithDelay() {
         handler?.removeCallbacksAndMessages(null) // 중복 실행 방지
         handler = Handler(Looper.getMainLooper())
         handler?.postDelayed({
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
-        }, 2000)
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        isResumedAfterPermissionRequest = true
-        if (requestCode == PERMISSIONS_REQUEST_CODE) {
-            if (!(grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED })) {
-                 showPermissionDeniedDialog()
-            }
-        }
-    }
-
-    private fun showPermissionDeniedDialog() {
-        AlertDialog.Builder(this)
-            .setTitle("권한 필요")
-            .setMessage("앱을 사용하기 위해 카메라와 저장소 접근 권한이 필요합니다. 설정으로 이동하여 권한을 허용해주세요.")
-            .setPositiveButton("설정으로 이동") { _, _ ->
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                val uri = Uri.fromParts("package", packageName, null)
-                intent.data = uri
-                startActivity(intent)
-            }
-            .setNegativeButton("취소") { dialog, _ ->
-                dialog.dismiss()
+            if (!isFinishing) { // 액티비티가 종료되지 않았을 때만 실행
+                startActivity(Intent(this, MainActivity::class.java))
                 finish()
             }
-            .setCancelable(false)
-            .show()
+        }, 2000)
     }
 }

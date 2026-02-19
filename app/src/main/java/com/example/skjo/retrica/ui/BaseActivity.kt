@@ -1,7 +1,11 @@
 package com.example.skjo.retrica.ui
 
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -16,26 +20,59 @@ abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. 상태 표시줄을 투명하게 만들고, 콘텐츠를 상태 표시줄 뒤로 확장 (Edge-to-Edge)
+        setTransparentStatusBar()
+
+        binding = getViewBinding()
+        setContentView(binding.root)
+
+        setStatusBarPadding()
+
+        initView()
+    }
+
+    abstract fun getViewBinding(): B
+
+    open fun initView() = Unit
+
+    /**
+     * 상태 표시줄을 투명하게 만들고, 콘텐츠를 상태 표시줄 뒤로 확장 (Edge-to-Edge)
+     */
+    private fun setTransparentStatusBar() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = Color.TRANSPARENT
+    }
+    /**
+     * 시스템 UI(상태 표시줄 등)가 차지하는 영역을 가져와, 해당 영역만큼 패딩 적용
+     */
+    private fun setStatusBarPadding() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = Color.TRANSPARENT
 
         binding = getViewBinding()
         setContentView(binding.root)
 
-        // 2. 시스템 UI(상태 표시줄 등)가 차지하는 영역을 가져와, 해당 영역만큼 패딩 적용
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.updatePadding(left = systemBars.left, top = systemBars.top, right = systemBars.right, bottom = systemBars.bottom)
             insets
         }
-
-        init()
     }
 
-    abstract fun getViewBinding(): B
-
-    open fun init() {
-        // 하위 액티비티에서 필요에 따라 재정의하여 사용
+    fun showPermissionDeniedDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("권한 필요")
+            .setMessage("앱을 사용하기 위해 카메라와 저장소 접근 권한이 필요합니다. 설정으로 이동하여 권한을 허용해주세요.")
+            .setPositiveButton("설정으로 이동") { _, _ ->
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", packageName, null)
+                intent.data = uri
+                startActivity(intent)
+            }
+            .setNegativeButton("취소") { dialog, _ ->
+                dialog.dismiss()
+                finish()
+            }
+            .setCancelable(false)
+            .show()
     }
 }
