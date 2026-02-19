@@ -16,6 +16,8 @@ import javax.microedition.khronos.opengles.GL10
 
 class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Renderer {
 
+    var isFilterEnabled = false
+
     private val vertices = floatArrayOf(
         -1.0f, -1.0f,  // 0, Bottom Left
         1.0f, -1.0f,   // 1, Bottom Right
@@ -23,7 +25,6 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
         1.0f, 1.0f     // 3, Top Right
     )
 
-    // 표준 텍스처 좌표 (상하 반전 없음). transformMatrix가 변환을 처리합니다.
     private val textureVertices = floatArrayOf(
         0.0f, 0.0f, // 0, Bottom Left
         1.0f, 0.0f, // 1, Bottom Right
@@ -39,6 +40,7 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
     private var texCoordHandle = 0
     private var textureHandle = 0
     private var transformMatrixHandle = 0
+    private var isGrayscaleHandle = 0
 
     private var textureId = 0
     private lateinit var surfaceTexture: SurfaceTexture
@@ -60,8 +62,15 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
             "precision mediump float;\n" +
             "varying vec2 v_TexCoord;\n" +
             "uniform samplerExternalOES u_Texture;\n" +
+            "uniform int u_IsGrayscale;\n" +
             "void main() {\n" +
-            "  gl_FragColor = texture2D(u_Texture, v_TexCoord);\n" +
+            "  vec4 color = texture2D(u_Texture, v_TexCoord);\n" +
+            "  if (u_IsGrayscale == 1) {\n" +
+            "    float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));\n" +
+            "    gl_FragColor = vec4(gray, gray, gray, 1.0);\n" +
+            "  } else {\n" +
+            "    gl_FragColor = color;\n" +
+            "  }\n" +
             "}"
 
     init {
@@ -90,6 +99,7 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
         texCoordHandle = GLES20.glGetAttribLocation(program, "a_TexCoord")
         textureHandle = GLES20.glGetUniformLocation(program, "u_Texture")
         transformMatrixHandle = GLES20.glGetUniformLocation(program, "u_TransformMatrix")
+        isGrayscaleHandle = GLES20.glGetUniformLocation(program, "u_IsGrayscale")
 
         val textures = IntArray(1)
         GLES20.glGenTextures(1, textures, 0)
@@ -115,6 +125,8 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
         GLES20.glUseProgram(program)
+
+        GLES20.glUniform1i(isGrayscaleHandle, if (isFilterEnabled) 1 else 0)
 
         GLES20.glEnableVertexAttribArray(positionHandle)
         GLES20.glVertexAttribPointer(positionHandle, 2, GLES20.GL_FLOAT, false, 0, vertexBuffer)

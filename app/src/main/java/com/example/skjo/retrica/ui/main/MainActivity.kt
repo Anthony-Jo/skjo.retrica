@@ -33,6 +33,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         }
         viewModel.fetchData()
 
+        binding.switchFilter.setOnCheckedChangeListener { _, isChecked ->
+            renderer.isFilterEnabled = isChecked
+        }
+
         cameraExecutor = Executors.newSingleThreadExecutor()
         cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
