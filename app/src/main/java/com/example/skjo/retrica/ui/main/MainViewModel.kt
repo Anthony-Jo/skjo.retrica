@@ -1,4 +1,4 @@
-package com.example.skjo.retrica.ui
+package com.example.skjo.retrica.ui.main
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

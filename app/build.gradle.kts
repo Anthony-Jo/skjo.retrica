@@ -37,7 +37,10 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        shaders = true
     }
+
+    ndkVersion = "25.2.9519653"
 }
 
 dependencies {

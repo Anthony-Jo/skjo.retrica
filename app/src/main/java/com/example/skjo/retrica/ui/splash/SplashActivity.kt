@@ -1,4 +1,4 @@
-package com.example.skjo.retrica.ui
+package com.example.skjo.retrica.ui.splash
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -11,6 +11,8 @@ import android.os.Looper
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import com.example.skjo.retrica.databinding.ActivitySplashBinding
+import com.example.skjo.retrica.ui.BaseActivity
+import com.example.skjo.retrica.ui.main.MainActivity
 
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : BaseActivity<ActivitySplashBinding>() {
