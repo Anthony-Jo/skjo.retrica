@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -16,6 +17,7 @@ import androidx.viewbinding.ViewBinding
 abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
 
     protected lateinit var binding: B
+    private var permissionDialog: AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,16 +43,11 @@ abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         window.statusBarColor = Color.TRANSPARENT
     }
+
     /**
      * 시스템 UI(상태 표시줄 등)가 차지하는 영역을 가져와, 해당 영역만큼 패딩 적용
      */
     private fun setStatusBarPadding() {
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        window.statusBarColor = Color.TRANSPARENT
-
-        binding = getViewBinding()
-        setContentView(binding.root)
-
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             view.updatePadding(left = systemBars.left, top = systemBars.top, right = systemBars.right, bottom = systemBars.bottom)
@@ -58,15 +55,22 @@ abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
         }
     }
 
-    fun showPermissionDeniedDialog() {
-        AlertDialog.Builder(this)
+    /**
+     * 필수 권한 허용 필요 안내 dialog 노출
+     * - 중복 노출 방지
+     * - positiveButton : App settings 이동
+     * - negativeButton : 앱 종료
+     * - launcher: App settings 이동을 위한 launcher / result callback
+     */
+    fun showPermissionDeniedDialog(launcher: ActivityResultLauncher<Intent>? = null) {
+        if (permissionDialog?.isShowing == true) {
+            return
+        }
+        permissionDialog = AlertDialog.Builder(this)
             .setTitle("권한 필요")
             .setMessage("앱을 사용하기 위해 카메라와 저장소 접근 권한이 필요합니다. 설정으로 이동하여 권한을 허용해주세요.")
             .setPositiveButton("설정으로 이동") { _, _ ->
-                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                val uri = Uri.fromParts("package", packageName, null)
-                intent.data = uri
-                startActivity(intent)
+                startAppDetailSettings(launcher)
             }
             .setNegativeButton("취소") { dialog, _ ->
                 dialog.dismiss()
@@ -74,5 +78,16 @@ abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
             }
             .setCancelable(false)
             .show()
+    }
+
+    /**
+     * start app detail settings
+     * - ActivityResultLauncher 가 null 이면 startActivity()
+     */
+    private fun startAppDetailSettings(launcher: ActivityResultLauncher<Intent>? = null) {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        val uri = Uri.fromParts("package", packageName, null)
+        intent.data = uri
+        launcher?.launch(intent) ?: run { startActivity(intent) }
     }
 }

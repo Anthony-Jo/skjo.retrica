@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,24 +29,35 @@ class SplashActivity : BaseActivity<ActivitySplashBinding>() {
         arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
 
+    /**
+     * - 모든 필수 권한 허용됨: start main activity
+     * - 하나라도 허용되지 않음: 권한 요청 안내 popup 노출
+     */
     private val permissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             if (permissions.values.all { it }) {
-                // 모든 권한이 승인됨
                 startMainWithDelay()
             } else {
-                // 권한이 하나라도 거부됨
-                showPermissionDeniedDialog()
+                showPermissionDeniedDialog(appDetailsSettingsLauncher)
             }
         }
 
     override fun getViewBinding() = ActivitySplashBinding.inflate(layoutInflater)
     override fun initView() = Unit
 
-    override fun onResume() {
-        super.onResume()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         checkPermissionsAndProceed()
     }
+
+    /**
+     * App Details Settings Launcher
+     * - App settings 에서 돌아오면 다시 권한 체크 수행
+     */
+    private val appDetailsSettingsLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            checkPermissionsAndProceed()
+        }
 
     override fun onPause() {
         super.onPause()
