@@ -14,9 +14,10 @@ import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Renderer {
+class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Renderer, IFilter {
 
-    var isFilterEnabled = false
+    @Volatile
+    private var isFilterEnabled = false
 
     private val vertices = floatArrayOf(
         -1.0f, -1.0f,  // 0, Bottom Left
@@ -161,11 +162,25 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
         return shader
     }
 
-    val surfaceProvider = Preview.SurfaceProvider { request -> onSurfaceRequested(request) }
+    override val surfaceProvider = Preview.SurfaceProvider { request -> onSurfaceRequested(request) }
 
     private fun onSurfaceRequested(request: SurfaceRequest) {
         surfaceTexture.setDefaultBufferSize(request.resolution.width, request.resolution.height)
         val surface = android.view.Surface(surfaceTexture)
         request.provideSurface(surface, ContextCompat.getMainExecutor(glSurfaceView.context)) {}
+    }
+
+    override fun setFilterEnabled(enabled: Boolean) {
+        glSurfaceView.queueEvent {
+            isFilterEnabled = enabled
+        }
+    }
+
+    override fun release() {
+        glSurfaceView.queueEvent {
+            GLES20.glDeleteProgram(program)
+            GLES20.glDeleteTextures(1, intArrayOf(textureId), 0)
+            surfaceTexture.release()
+        }
     }
 }
