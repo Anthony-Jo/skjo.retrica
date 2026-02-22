@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.skjo.retrica.databinding.ActivityMainBinding
-import com.example.skjo.retrica.model.CameraLensFacingType
+import com.example.skjo.retrica.model.CameraType
 import com.example.skjo.retrica.ui.BaseActivity
 import com.example.skjo.retrica.ui.main.filter.FilterAdapter
 import com.example.skjo.retrica.utils.GLRenderer
@@ -38,7 +38,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var filter: IFilter
     private var cameraProvider: ProcessCameraProvider? = null
-    private var lensFacingType: CameraLensFacingType = CameraLensFacingType.Back
+    private var lensFacingType: CameraType = CameraType.Back
 
     private lateinit var filterAdapter: FilterAdapter
 
@@ -66,9 +66,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
             it.isEnabled = false
             // 현재 렌즈 방향을 반대로 바꿉니다.
             lensFacingType = if (lensFacingType.value == CameraSelector.LENS_FACING_BACK) {
-                CameraLensFacingType.Front
+                CameraType.Front
             } else {
-                CameraLensFacingType.Back
+                CameraType.Back
             }
             viewModel.saveLastCamera(lensFacingType)
             cameraExecutor.execute {
@@ -107,7 +107,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
             }
 
             lastUsedCamera.observe(this@MainActivity) {
-                lensFacingType = CameraLensFacingType.toLensFacing(it)
+                lensFacingType = CameraType.toLensFacing(it)
             }
 
             lastSelectedFilter.observe(this@MainActivity) { lastFilter ->
