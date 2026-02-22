@@ -4,10 +4,10 @@ import android.graphics.SurfaceTexture
 import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
-import android.util.Log
 import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceRequest
 import androidx.core.content.ContextCompat
+import com.example.skjo.retrica.model.FilterType
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -17,35 +17,22 @@ import javax.microedition.khronos.opengles.GL10
 class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Renderer, IFilter {
 
     @Volatile
-    private var isFilterEnabled = false
+    private var currentFilterType: FilterType = FilterType.NONE
 
-    private val vertices = floatArrayOf(
-        -1.0f, -1.0f,  // 0, Bottom Left
-        1.0f, -1.0f,   // 1, Bottom Right
-        -1.0f, 1.0f,    // 2, Top Left
-        1.0f, 1.0f     // 3, Top Right
-    )
-
-    private val textureVertices = floatArrayOf(
-        0.0f, 0.0f, // 0, Bottom Left
-        1.0f, 0.0f, // 1, Bottom Right
-        0.0f, 1.0f, // 2, Top Left
-        1.0f, 1.0f  // 3, Top Right
-    )
+    private val vertices = floatArrayOf(-1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
+    private val textureVertices = floatArrayOf(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f)
 
     private var vertexBuffer: FloatBuffer
     private var textureBuffer: FloatBuffer
 
-    private var program = 0
+    private val programs = mutableMapOf<FilterType, Int>()
     private var positionHandle = 0
     private var texCoordHandle = 0
     private var textureHandle = 0
     private var transformMatrixHandle = 0
-    private var isGrayscaleHandle = 0
 
     private var textureId = 0
     private lateinit var surfaceTexture: SurfaceTexture
-
     private val transformMatrix = FloatArray(16)
 
     private val vertexShaderCode = "#version 100\n" +
@@ -58,49 +45,36 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
             "  v_TexCoord = (u_TransformMatrix * vec4(a_TexCoord, 0.0, 1.0)).xy;\n" +
             "}"
 
-    private val fragmentShaderCode = "#version 100\n" +
-            "#extension GL_OES_EGL_image_external : require\n" +
-            "precision mediump float;\n" +
-            "varying vec2 v_TexCoord;\n" +
-            "uniform samplerExternalOES u_Texture;\n" +
-            "uniform int u_IsGrayscale;\n" +
-            "void main() {\n" +
-            "  vec4 color = texture2D(u_Texture, v_TexCoord);\n" +
-            "  if (u_IsGrayscale == 1) {\n" +
-            "    float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));\n" +
-            "    gl_FragColor = vec4(gray, gray, gray, 1.0);\n" +
-            "  } else {\n" +
-            "    gl_FragColor = color;\n" +
-            "  }\n" +
-            "}"
+    private fun baseShader(body: String) =
+        "#version 100\n" +
+                "#extension GL_OES_EGL_image_external : require\n" +
+                "precision mediump float;\n" +
+                "varying vec2 v_TexCoord;\n" +
+                "uniform samplerExternalOES u_Texture;\n" +
+                "void main() {\n" +
+                "  vec4 color = texture2D(u_Texture, v_TexCoord);\n" +
+                "  $body\n" +
+                "}"
+
+    private val fragmentShaderBodies = mapOf(
+        FilterType.NONE to "gl_FragColor = color;",
+        FilterType.GRAYSCALE to "float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));\n    gl_FragColor = vec4(gray, gray, gray, 1.0);",
+        FilterType.SEPIA to "vec3 sepiaColor = vec3(dot(color.rgb, vec3(0.393, 0.769, 0.189)), dot(color.rgb, vec3(0.349, 0.686, 0.168)), dot(color.rgb, vec3(0.272, 0.534, 0.131)));\n    gl_FragColor = vec4(sepiaColor, 1.0);",
+        FilterType.INVERT to "gl_FragColor = vec4(1.0 - color.r, 1.0 - color.g, 1.0 - color.b, 1.0);",
+        FilterType.VIGNETTE to "float d = distance(v_TexCoord, vec2(0.5, 0.5));\n    float vignette = smoothstep(0.8, 0.4, d);\n    gl_FragColor = vec4(color.rgb * vignette, 1.0);",
+        FilterType.POSTERIZE to "float numColors = 8.0;\n    gl_FragColor = vec4(floor(color.r * numColors) / numColors, floor(color.g * numColors) / numColors, floor(color.b * numColors) / numColors, 1.0);"
+    )
 
     init {
-        vertexBuffer = ByteBuffer.allocateDirect(vertices.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer().apply {
-            put(vertices)
-            position(0)
-        }
-
-        textureBuffer = ByteBuffer.allocateDirect(textureVertices.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer().apply {
-            put(textureVertices)
-            position(0)
-        }
+        vertexBuffer = ByteBuffer.allocateDirect(vertices.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer().apply { put(vertices).position(0) }
+        textureBuffer = ByteBuffer.allocateDirect(textureVertices.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer().apply { put(textureVertices).position(0) }
     }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
-        val vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
-        val fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)
-
-        program = GLES20.glCreateProgram().also {
-            GLES20.glAttachShader(it, vertexShader)
-            GLES20.glAttachShader(it, fragmentShader)
-            GLES20.glLinkProgram(it)
+        fragmentShaderBodies.forEach { (type, body) ->
+            val fragmentShader = baseShader(body)
+            programs[type] = createProgram(vertexShaderCode, fragmentShader)
         }
-
-        positionHandle = GLES20.glGetAttribLocation(program, "a_Position")
-        texCoordHandle = GLES20.glGetAttribLocation(program, "a_TexCoord")
-        textureHandle = GLES20.glGetUniformLocation(program, "u_Texture")
-        transformMatrixHandle = GLES20.glGetUniformLocation(program, "u_TransformMatrix")
-        isGrayscaleHandle = GLES20.glGetUniformLocation(program, "u_IsGrayscale")
 
         val textures = IntArray(1)
         GLES20.glGenTextures(1, textures, 0)
@@ -114,9 +88,7 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
         surfaceTexture.setOnFrameAvailableListener { glSurfaceView.requestRender() }
     }
 
-    override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
-        GLES20.glViewport(0, 0, width, height)
-    }
+    override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) { GLES20.glViewport(0, 0, width, height) }
 
     override fun onDrawFrame(gl: GL10?) {
         surfaceTexture.updateTexImage()
@@ -125,9 +97,13 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
+        val program = programs[currentFilterType] ?: programs[FilterType.NONE] ?: return
         GLES20.glUseProgram(program)
 
-        GLES20.glUniform1i(isGrayscaleHandle, if (isFilterEnabled) 1 else 0)
+        positionHandle = GLES20.glGetAttribLocation(program, "a_Position")
+        texCoordHandle = GLES20.glGetAttribLocation(program, "a_TexCoord")
+        textureHandle = GLES20.glGetUniformLocation(program, "u_Texture")
+        transformMatrixHandle = GLES20.glGetUniformLocation(program, "u_TransformMatrix")
 
         GLES20.glEnableVertexAttribArray(positionHandle)
         GLES20.glVertexAttribPointer(positionHandle, 2, GLES20.GL_FLOAT, false, 0, vertexBuffer)
@@ -147,6 +123,38 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
         GLES20.glDisableVertexAttribArray(texCoordHandle)
     }
 
+    override val surfaceProvider = Preview.SurfaceProvider { request -> onSurfaceRequested(request) }
+
+    private fun onSurfaceRequested(request: SurfaceRequest) {
+        surfaceTexture.setDefaultBufferSize(request.resolution.width, request.resolution.height)
+        val surface = android.view.Surface(surfaceTexture)
+        request.provideSurface(surface, ContextCompat.getMainExecutor(glSurfaceView.context)) {}
+    }
+
+    override fun setFilter(type: FilterType) {
+        glSurfaceView.queueEvent {
+            currentFilterType = type
+        }
+    }
+
+    override fun release() {
+        glSurfaceView.queueEvent {
+            programs.values.forEach { GLES20.glDeleteProgram(it) }
+            GLES20.glDeleteTextures(1, intArrayOf(textureId), 0)
+            surfaceTexture.release()
+        }
+    }
+
+    private fun createProgram(vertexShader: String, fragmentShader: String): Int {
+        val vs = loadShader(GLES20.GL_VERTEX_SHADER, vertexShader)
+        val fs = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShader)
+        return GLES20.glCreateProgram().also {
+            GLES20.glAttachShader(it, vs)
+            GLES20.glAttachShader(it, fs)
+            GLES20.glLinkProgram(it)
+        }
+    }
+
     private fun loadShader(type: Int, shaderCode: String): Int {
         val shader = GLES20.glCreateShader(type)
         GLES20.glShaderSource(shader, shaderCode)
@@ -160,27 +168,5 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
             throw RuntimeException("Could not compile shader $type: $info")
         }
         return shader
-    }
-
-    override val surfaceProvider = Preview.SurfaceProvider { request -> onSurfaceRequested(request) }
-
-    private fun onSurfaceRequested(request: SurfaceRequest) {
-        surfaceTexture.setDefaultBufferSize(request.resolution.width, request.resolution.height)
-        val surface = android.view.Surface(surfaceTexture)
-        request.provideSurface(surface, ContextCompat.getMainExecutor(glSurfaceView.context)) {}
-    }
-
-    override fun setFilterEnabled(enabled: Boolean) {
-        glSurfaceView.queueEvent {
-            isFilterEnabled = enabled
-        }
-    }
-
-    override fun release() {
-        glSurfaceView.queueEvent {
-            GLES20.glDeleteProgram(program)
-            GLES20.glDeleteTextures(1, intArrayOf(textureId), 0)
-            surfaceTexture.release()
-        }
     }
 }

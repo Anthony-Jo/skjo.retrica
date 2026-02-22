@@ -4,14 +4,17 @@ import android.opengl.GLSurfaceView
 import android.util.Log
 import android.util.Rational
 import androidx.activity.viewModels
-import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.core.UseCaseGroup
 import androidx.camera.core.ViewPort
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.skjo.retrica.R
 import com.example.skjo.retrica.databinding.ActivityMainBinding
+import com.example.skjo.retrica.model.FilterInfo
+import com.example.skjo.retrica.model.FilterType
 import com.example.skjo.retrica.ui.BaseActivity
 import com.example.skjo.retrica.utils.GLRenderer
 import com.example.skjo.retrica.utils.IFilter
@@ -35,6 +38,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     override fun initView() {
         super.initView()
         observeViewModel()
+        setupFilterList()
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
@@ -45,11 +49,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         binding.layoutGlSurfaceView.setRenderer(renderer)
         binding.layoutGlSurfaceView.renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
 
-        // 스위치 리스너 설정 (필터 제어)
-        binding.switchFilter.setOnCheckedChangeListener { _, isChecked ->
-            filter.setFilterEnabled(isChecked)
-        }
-
         setupCamera()
     }
 
@@ -58,6 +57,24 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             binding.tvFps.text = it
         }
         viewModel.fetchData()
+    }
+
+    private fun setupFilterList() {
+        val filters = listOf(
+            FilterInfo("None", FilterType.NONE, R.mipmap.ic_launcher),
+            FilterInfo("Grayscale", FilterType.GRAYSCALE, R.mipmap.ic_launcher),
+            FilterInfo("Sepia", FilterType.SEPIA, R.mipmap.ic_launcher),
+            FilterInfo("Invert", FilterType.INVERT, R.mipmap.ic_launcher),
+            FilterInfo("Vignette", FilterType.VIGNETTE, R.mipmap.ic_launcher),
+            FilterInfo("Posterize", FilterType.POSTERIZE, R.mipmap.ic_launcher)
+        )
+
+        val adapter = FilterAdapter(filters) { selectedFilter ->
+            (filter as? GLRenderer)?.setFilter(selectedFilter.type)
+        }
+
+        binding.rvFilters.adapter = adapter
+        binding.rvFilters.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
     }
 
     private fun setupCamera() {
