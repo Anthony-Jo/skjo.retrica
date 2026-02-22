@@ -115,3 +115,20 @@
         }
     }
 ```
+- 사용자가 최근 사용한 상태 저장/불러오기 (카메라 타입, 필터)
+```kotlin
+  private fun loadInitialData() {
+        viewModelScope.launch {
+            // 여러 비동기 로딩이 있다면 여기서 한 번에 처리
+            val lastCamera = sharedPrefWrapper.getLastCamera()
+            val lastFilter = sharedPrefWrapper.getLastFilter()
+
+            _lastUsedCamera.value = lastCamera
+            _lastSelectedFilter.value = lastFilter
+
+            // 모든 데이터 로딩이 끝나면 상태를 true로 변경
+            _isInitialized.value = true
+        }
+    }
+```
+#### 4. 기타
