@@ -11,11 +11,9 @@ import androidx.camera.core.ViewPort
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.skjo.retrica.R
 import com.example.skjo.retrica.databinding.ActivityMainBinding
-import com.example.skjo.retrica.model.FilterInfo
-import com.example.skjo.retrica.model.FilterType
 import com.example.skjo.retrica.ui.BaseActivity
+import com.example.skjo.retrica.ui.main.filter.FilterAdapter
 import com.example.skjo.retrica.utils.GLRenderer
 import com.example.skjo.retrica.utils.IFilter
 import com.google.common.util.concurrent.ListenableFuture
@@ -60,16 +58,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
 
     private fun setupFilterList() {
-        val filters = listOf(
-            FilterInfo("None", FilterType.NONE, R.mipmap.ic_launcher),
-            FilterInfo("Grayscale", FilterType.GRAYSCALE, R.mipmap.ic_launcher),
-            FilterInfo("Sepia", FilterType.SEPIA, R.mipmap.ic_launcher),
-            FilterInfo("Invert", FilterType.INVERT, R.mipmap.ic_launcher),
-            FilterInfo("Vignette", FilterType.VIGNETTE, R.mipmap.ic_launcher),
-            FilterInfo("Posterize", FilterType.POSTERIZE, R.mipmap.ic_launcher)
-        )
 
-        val adapter = FilterAdapter(filters) { selectedFilter ->
+        val adapter = FilterAdapter(this) { selectedFilter ->
             (filter as? GLRenderer)?.setFilter(selectedFilter.type)
         }
 

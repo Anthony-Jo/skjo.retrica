@@ -1,7 +1,7 @@
 package com.example.skjo.retrica.utils
 
 import androidx.camera.core.Preview
-import com.example.skjo.retrica.model.FilterType
+import com.example.skjo.retrica.model.FilterData
 
 /**
  * 카메라 필터 구현을 위한 범용 인터페이스.
@@ -19,7 +19,7 @@ interface IFilter {
      * 적용할 필터의 종류를 외부에서 안전하게 설정합니다.
      * @param type 적용할 필터의 종류 (FilterType)
      */
-    fun setFilter(type: FilterType)
+    fun setFilter(type: FilterData)
 
     /**
      * 필터와 관련된 모든 리소스(예: GL 텍스처, 프로그램)를 해제합니다.
