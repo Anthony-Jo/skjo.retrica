@@ -79,12 +79,12 @@
     }
 ```
 - 권한 허용 필요 안내 dialog 노출
-<img width="270" height="760" alt="Screenshot_20260223_000138" src="https://github.com/user-attachments/assets/1eed3862-bdd4-4dbe-97fa-84dbb584dbc3" />
+<img width="270" height="660" alt="Screenshot_20260223_000138" src="https://github.com/user-attachments/assets/1eed3862-bdd4-4dbe-97fa-84dbb584dbc3" />
 
 
 #### 1.2. `SplashActivity`
 - 앱 실행시 진입
-<img width="270" height="760" alt="Screenshot_20260223_000053" src="https://github.com/user-attachments/assets/63b00d02-9ebe-4f25-88db-f22ea3dda979" />
+<img width="270" height="660" alt="Screenshot_20260223_000053" src="https://github.com/user-attachments/assets/63b00d02-9ebe-4f25-88db-f22ea3dda979" />
 
 - permission (Camera) 체크 후 2초간 delay 후 `MainActivity` 진입
 #### 1.3 `MainActivity`
@@ -95,7 +95,7 @@
   - Front/Back Camera 전환 button 
   - 무한 스크롤 필터 UI
 
-<img width="270" height="760" alt="Screenshot_20260223_000216" src="https://github.com/user-attachments/assets/e89e3ca0-5ee3-46e0-9d53-4fca722c67d9" />
+<img width="270" height="660" alt="Screenshot_20260223_000216" src="https://github.com/user-attachments/assets/e89e3ca0-5ee3-46e0-9d53-4fca722c67d9" />
 
 ### 2. Model
 #### 2.1 `FilterType`
