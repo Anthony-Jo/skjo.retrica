@@ -1,6 +1,7 @@
 package com.example.skjo.retrica.ui.main
 
 import android.opengl.GLSurfaceView
+import android.os.Bundle
 import android.util.Log
 import android.util.Rational
 import android.view.View
@@ -11,6 +12,7 @@ import androidx.camera.core.UseCaseGroup
 import androidx.camera.core.ViewPort
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.LinearSnapHelper
@@ -22,6 +24,7 @@ import com.example.skjo.retrica.utils.GLRenderer
 import com.example.skjo.retrica.utils.IFilter
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -34,28 +37,43 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var filter: IFilter
     private var cameraProvider: ProcessCameraProvider? = null
+    private var lensFacing: Int = CameraSelector.LENS_FACING_BACK
+
     private lateinit var filterAdapter: FilterAdapter
 
     override fun getViewBinding() = ActivityMainBinding.inflate(layoutInflater)
 
-    override fun initView() {
-        super.initView()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        observeViewModel()
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         // GLSurfaceView 및 필터(렌더러) 설정
         val renderer = GLRenderer(binding.layoutGlSurfaceView)
         renderer.setPerformanceMonitor(this)
         filter = renderer
-        binding.layoutGlSurfaceView.setEGLContextClientVersion(3) // OpenGL ES 3.0 사용
-        binding.layoutGlSurfaceView.setRenderer(renderer)
-        binding.layoutGlSurfaceView.renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+        binding.layoutGlSurfaceView.apply {
+            setEGLContextClientVersion(3)
+            setRenderer(renderer)
+            renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+        }
+    }
 
-        // 어댑터와 UI를 먼저 설정합니다.
+    override fun initView() {
+        super.initView()
+
+        binding.btnChangeCamera.setOnClickListener { // 'btnSwitchCamera'는 레이아웃에 있는 버튼의 ID입니다.
+            // 현재 렌즈 방향을 반대로 바꿉니다.
+            lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                CameraSelector.LENS_FACING_FRONT
+            } else {
+                CameraSelector.LENS_FACING_BACK
+            }
+            viewModel.saveLastCamera(lensFacing)
+            bindPreview()
+        }
+
         setupFilterList()
-        // UI가 준비된 후 ViewModel의 데이터를 구독합니다.
-        observeViewModel()
-        // 마지막으로 카메라를 설정합니다.
-        setupCamera()
     }
 
     override fun onFpsUpdated(fps: Double) {
@@ -63,35 +81,49 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
     }
 
     private fun observeViewModel() {
-        viewModel.fps.observe(this) {
-            binding.tvFps.text = it
-        }
-
-        viewModel.currentFilter.observe(this) {
-            binding.tvCurrentFilter.text = it
-        }
-
-        // 1. 마지막 필터 정보를 받아와서 초기 스크롤 위치를 설정합니다.
-        viewModel.lastSelectedFilter.observe(this) { lastFilter ->
-            binding.rvFilters.post {
-                val layoutManager = binding.rvFilters.layoutManager as LinearLayoutManager
-                val currentPosition = layoutManager.findFirstVisibleItemPosition()
-                if (currentPosition == RecyclerView.NO_POSITION) return@post
-
-                val targetPosition = filterAdapter.findClosestPosition(currentPosition, lastFilter)
-
-                val smoothScroller = object : LinearSmoothScroller(this) {
-                    override fun calculateDxToMakeVisible(view: View, snapPreference: Int): Int {
-                        val dxToStart = super.calculateDxToMakeVisible(view, -1)
-                        val dxToEnd = super.calculateDxToMakeVisible(view, 1)
-                        return (dxToStart + dxToEnd) / 2
+        lifecycleScope.launch {
+            viewModel.isInitialized.collect { isInitialized ->
+                if (isInitialized) {
+                    if (cameraProvider == null) { // 카메라가 아직 설정되지 않았을 때만 호출
+                        setupCamera()
                     }
                 }
-                smoothScroller.targetPosition = targetPosition
-                layoutManager.startSmoothScroll(smoothScroller)
             }
         }
-        viewModel.loadLastFilter() // ViewModel에 마지막 필터 로드를 요청합니다.
+
+        viewModel.apply {
+            fps.observe(this@MainActivity) {
+                binding.tvFps.text = it
+            }
+
+            currentFilter.observe(this@MainActivity) {
+                binding.tvCurrentFilter.text = it
+            }
+
+            lastUsedCamera.observe(this@MainActivity) {
+                lensFacing = it
+            }
+
+            lastSelectedFilter.observe(this@MainActivity) { lastFilter ->
+                binding.rvFilters.post {
+                    val layoutManager = binding.rvFilters.layoutManager as LinearLayoutManager
+                    val currentPosition = layoutManager.findFirstVisibleItemPosition()
+                    if (currentPosition == RecyclerView.NO_POSITION) return@post
+
+                    val targetPosition = filterAdapter.findClosestPosition(currentPosition, lastFilter)
+
+                    val smoothScroller = object : LinearSmoothScroller(this@MainActivity) {
+                        override fun calculateDxToMakeVisible(view: View, snapPreference: Int): Int {
+                            val dxToStart = super.calculateDxToMakeVisible(view, -1)
+                            val dxToEnd = super.calculateDxToMakeVisible(view, 1)
+                            return (dxToStart + dxToEnd) / 2
+                        }
+                    }
+                    smoothScroller.targetPosition = targetPosition
+                    layoutManager.startSmoothScroll(smoothScroller)
+                }
+            }
+        }
     }
 
     private fun setupFilterList() {
@@ -148,7 +180,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
         val provider = cameraProvider ?: return
         val preview: Preview = Preview.Builder().build()
         val cameraSelector: CameraSelector = CameraSelector.Builder()
-            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+            .requireLensFacing(lensFacing)
             .build()
 
         val viewPort = ViewPort.Builder(

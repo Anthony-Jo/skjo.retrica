@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.skjo.retrica.data.SharedPrefWrapper
 import com.example.skjo.retrica.model.FilterData
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,7 +28,7 @@ class MainViewModel @Inject constructor(
     val currentFilter: LiveData<String> = _currentFilter
 
     init {
-        loadLastFilter()
+        loadInitialData()
     }
 
     /**
@@ -35,6 +37,24 @@ class MainViewModel @Inject constructor(
     fun updateFps(fps: Double) {
         val fpsText = String.format("%.1f FPS", fps)
         _fps.postValue(fpsText)
+    }
+
+    private val _isInitialized = MutableStateFlow(false)
+    val isInitialized: StateFlow<Boolean> = _isInitialized
+    // ---
+
+    private fun loadInitialData() {
+        viewModelScope.launch {
+            // 여러 비동기 로딩이 있다면 여기서 한 번에 처리
+            val lastCamera = sharedPrefWrapper.getLastCamera()
+            val lastFilter = sharedPrefWrapper.getLastFilter()
+
+            _lastUsedCamera.value = lastCamera
+            _lastSelectedFilter.value = lastFilter
+
+            // 모든 데이터 로딩이 끝나면 상태를 true로 변경
+            _isInitialized.value = true
+        }
     }
 
     /**
@@ -47,12 +67,12 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    /**
-     * SharedPreferences에서 마지막으로 사용한 필터를 불러와 LiveData에 설정합니다.
-     */
-    fun loadLastFilter() {
-        val lastFilter = sharedPrefWrapper.getLastFilter()
-        _lastSelectedFilter.value = lastFilter
-        _currentFilter.value = "Filter: ${lastFilter.name}"
+    private val _lastUsedCamera = MutableLiveData<Int>()
+    val lastUsedCamera: LiveData<Int> = _lastUsedCamera
+
+    fun saveLastCamera(lensFacing: Int) {
+        viewModelScope.launch {
+            sharedPrefWrapper.setLastCamera(lensFacing)
+        }
     }
 }
