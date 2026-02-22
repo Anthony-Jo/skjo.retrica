@@ -76,5 +76,4 @@ class MainViewModel @Inject constructor(
             sharedPrefWrapper.setLaseCamera(lensFacing)
         }
     }
-
 }
