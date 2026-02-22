@@ -12,11 +12,10 @@ import androidx.camera.core.ViewPort
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.LinearSmoothScroller
+import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.skjo.retrica.databinding.ActivityMainBinding
-import com.example.skjo.retrica.model.FilterData
 import com.example.skjo.retrica.ui.BaseActivity
 import com.example.skjo.retrica.ui.main.filter.FilterAdapter
 import com.example.skjo.retrica.utils.GLRenderer

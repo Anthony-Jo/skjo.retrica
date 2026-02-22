@@ -15,8 +15,6 @@ class MainViewModel @Inject constructor(
     private val sharedPrefWrapper: SharedPrefWrapper
 ) : ViewModel() {
 
-    private val _data = MutableLiveData<String>()
-    val data: LiveData<String> = _data
 
     // 마지막으로 선택된 필터를 UI에 전달하기 위한 LiveData
     private val _lastSelectedFilter = MutableLiveData<FilterData>()
@@ -37,17 +35,13 @@ class MainViewModel @Inject constructor(
         _fps.postValue(fpsText)
     }
 
-    fun fetchData() {
-        viewModelScope.launch {
-            _data.value = "Hello from ViewModel"
-        }
-    }
-
     /**
      * 사용자가 선택한 필터를 SharedPreferences에 저장합니다.
      */
     fun saveLastFilter(filterType: FilterData) {
-        sharedPrefWrapper.setLastFilter(filterType)
+        viewModelScope.launch {
+            sharedPrefWrapper.setLastFilter(filterType)
+        }
     }
 
     /**
