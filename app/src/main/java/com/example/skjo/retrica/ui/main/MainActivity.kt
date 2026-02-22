@@ -61,8 +61,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
 
     override fun initView() {
         super.initView()
-
-        binding.btnChangeCamera.setOnClickListener { // 'btnSwitchCamera'는 레이아웃에 있는 버튼의 ID입니다.
+        binding.btnChangeCamera.setOnClickListener {
+            it.isEnabled = false
             // 현재 렌즈 방향을 반대로 바꿉니다.
             lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
                 CameraSelector.LENS_FACING_FRONT
@@ -70,7 +70,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
                 CameraSelector.LENS_FACING_BACK
             }
             viewModel.saveLastCamera(lensFacing)
-            bindPreview()
+            cameraExecutor.execute {
+                bindPreview()
+                runOnUiThread {
+                    it.isEnabled = true
+                }
+            }
         }
 
         setupFilterList()
@@ -183,23 +188,24 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
             .requireLensFacing(lensFacing)
             .build()
 
-        val viewPort = ViewPort.Builder(
-            Rational(binding.layoutGlSurfaceView.width, binding.layoutGlSurfaceView.height),
-            binding.layoutGlSurfaceView.display.rotation
-        ).build()
+        runOnUiThread {
+            val viewPort = ViewPort.Builder(
+                Rational(binding.layoutGlSurfaceView.width, binding.layoutGlSurfaceView.height),
+                binding.layoutGlSurfaceView.display.rotation
+            ).build()
 
-        val useCaseGroup = UseCaseGroup.Builder()
-            .addUseCase(preview)
-            .setViewPort(viewPort)
-            .build()
+            val useCaseGroup = UseCaseGroup.Builder()
+                .addUseCase(preview)
+                .setViewPort(viewPort)
+                .build()
+            preview.setSurfaceProvider(filter.surfaceProvider)
 
-        preview.setSurfaceProvider(filter.surfaceProvider)
-
-        try {
-            provider.unbindAll()
-            provider.bindToLifecycle(this, cameraSelector, useCaseGroup)
-        } catch (e: Exception) {
-            Log.e("MainActivity", "UseCase binding failed", e)
+            try {
+                provider.unbindAll()
+                provider.bindToLifecycle(this, cameraSelector, useCaseGroup)
+            } catch (e: Exception) {
+                Log.e("MainActivity", "UseCase binding failed", e)
+            }
         }
     }
 
@@ -207,7 +213,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
         super.onResume()
         binding.layoutGlSurfaceView.onResume()
         if (cameraProvider != null) {
-            binding.layoutGlSurfaceView.post { bindPreview() }
+            cameraExecutor.execute {
+                bindPreview()
+            }
         }
     }
 
