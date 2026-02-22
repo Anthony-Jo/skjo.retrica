@@ -131,4 +131,18 @@
         }
     }
 ```
-#### 4. 기타
+### 4. 기타
+#### 4.1 `GLRenderer`
+- OpenGL ES 렌더링의 모든 핵심 로직
+- `CameraX` 로 부터 `Surface` 를 제공 받음
+- 카메라 프레임을 `SurfaceTexture`로 받고, `onDrawFrame`에서 이 텍스처를 GPU에 업로드
+- 동적으로 선택된 Fragment Shader를 통해 필터를 적용하고 화면에 렌더링
+- 다양한 필터의 GLSL 코드를 Map으로 관리
+- setFilter() 메서드를 통해 런타임에 GPU 프로그램을 교체함
+```kotlin
+  override fun setFilter(type: FilterType) {
+        glSurfaceView.queueEvent {
+            currentFilterType = type
+        }
+    }
+```
