@@ -7,6 +7,7 @@ import com.example.skjo.retrica.model.FilterData
 import javax.inject.Inject
 import javax.inject.Singleton
 import androidx.core.content.edit
+import com.example.skjo.retrica.model.CameraLensFacingType
 
 @Singleton // Hilt가 이 클래스도 싱글톤으로 관리하도록 합니다.
 class SharedPrefWrapper @Inject constructor(
@@ -38,13 +39,12 @@ class SharedPrefWrapper @Inject constructor(
         }
     }
 
-
     /**
-     * 마지막으로 사용한 카메라 방향(Int)을 저장합니다.
+     * 마지막으로 사용한 카메라 방향을 저장합니다.
+     * - enum 으로 안정성 강화
      */
-    fun setLastCamera(cameraLensFacing: Int) {
-        // SharedPreferences에 정수 값을 저장합니다.
-        prefs.edit { putInt(KEY_LAST_CAMERA, cameraLensFacing) }
+    fun setLaseCamera(cameraLensFacing: CameraLensFacingType) {
+        prefs.edit { putInt(KEY_LAST_CAMERA, cameraLensFacing.value) }
     }
 
     /**
@@ -52,7 +52,6 @@ class SharedPrefWrapper @Inject constructor(
      * @return 저장된 카메라 방향. 없으면 기본값으로 후면 카메라를 반환합니다.
      */
     fun getLastCamera(): Int {
-        // 저장된 값을 불러오고, 없으면 CameraSelector.LENS_FACING_BACK을 기본값으로 사용합니다.
-        return prefs.getInt(KEY_LAST_CAMERA, CameraSelector.LENS_FACING_BACK)
+        return prefs.getInt(KEY_LAST_CAMERA, CameraLensFacingType.Back.value)
     }
 }

@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skjo.retrica.data.SharedPrefWrapper
+import com.example.skjo.retrica.model.CameraLensFacingType
 import com.example.skjo.retrica.model.FilterData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,9 +71,10 @@ class MainViewModel @Inject constructor(
     private val _lastUsedCamera = MutableLiveData<Int>()
     val lastUsedCamera: LiveData<Int> = _lastUsedCamera
 
-    fun saveLastCamera(lensFacing: Int) {
+    fun saveLastCamera(lensFacing: CameraLensFacingType) {
         viewModelScope.launch {
-            sharedPrefWrapper.setLastCamera(lensFacing)
+            sharedPrefWrapper.setLaseCamera(lensFacing)
         }
     }
+
 }

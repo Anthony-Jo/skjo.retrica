@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.skjo.retrica.databinding.ActivityMainBinding
+import com.example.skjo.retrica.model.CameraLensFacingType
 import com.example.skjo.retrica.ui.BaseActivity
 import com.example.skjo.retrica.ui.main.filter.FilterAdapter
 import com.example.skjo.retrica.utils.GLRenderer
@@ -37,7 +38,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var filter: IFilter
     private var cameraProvider: ProcessCameraProvider? = null
-    private var lensFacing: Int = CameraSelector.LENS_FACING_BACK
+    private var lensFacingType: CameraLensFacingType = CameraLensFacingType.Back
 
     private lateinit var filterAdapter: FilterAdapter
 
@@ -64,12 +65,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
         binding.btnChangeCamera.setOnClickListener {
             it.isEnabled = false
             // 현재 렌즈 방향을 반대로 바꿉니다.
-            lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
-                CameraSelector.LENS_FACING_FRONT
+            lensFacingType = if (lensFacingType.value == CameraSelector.LENS_FACING_BACK) {
+                CameraLensFacingType.Front
             } else {
-                CameraSelector.LENS_FACING_BACK
+                CameraLensFacingType.Back
             }
-            viewModel.saveLastCamera(lensFacing)
+            viewModel.saveLastCamera(lensFacingType)
             cameraExecutor.execute {
                 bindPreview()
                 runOnUiThread {
@@ -106,7 +107,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
             }
 
             lastUsedCamera.observe(this@MainActivity) {
-                lensFacing = it
+                lensFacingType = CameraLensFacingType.toLensFacing(it)
             }
 
             lastSelectedFilter.observe(this@MainActivity) { lastFilter ->
@@ -185,7 +186,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
         val provider = cameraProvider ?: return
         val preview: Preview = Preview.Builder().build()
         val cameraSelector: CameraSelector = CameraSelector.Builder()
-            .requireLensFacing(lensFacing)
+            .requireLensFacing(lensFacingType.value)
             .build()
 
         runOnUiThread {
