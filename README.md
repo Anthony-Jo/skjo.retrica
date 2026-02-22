@@ -1,5 +1,4 @@
-# skjo.retrica
-## 조성광: [레트리카] 확장 가능한 카메라 필터 엔진 설계
+# 조성광: [레트리카] 확장 가능한 카메라 필터 엔진 설계
 
 ## TODO LIST
 - [x] App Permission logic 
