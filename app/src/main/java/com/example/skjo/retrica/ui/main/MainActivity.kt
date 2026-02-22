@@ -41,8 +41,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     override fun initView() {
         super.initView()
-        observeViewModel()
-
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         // GLSurfaceView 및 필터(렌더러) 설정
@@ -52,8 +50,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         binding.layoutGlSurfaceView.setRenderer(renderer)
         binding.layoutGlSurfaceView.renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
 
-        // filter가 초기화된 후에 호출되어야 합니다.
+        // 어댑터와 UI를 먼저 설정합니다.
         setupFilterList()
+        // UI가 준비된 후 ViewModel의 데이터를 구독합니다.
+        observeViewModel()
+        // 마지막으로 카메라를 설정합니다.
         setupCamera()
     }
 
@@ -62,6 +63,28 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             binding.tvFps.text = it
         }
         viewModel.fetchData()
+
+        // 1. 마지막 필터 정보를 받아와서 초기 스크롤 위치를 설정합니다.
+        viewModel.lastSelectedFilter.observe(this) { lastFilter ->
+            binding.rvFilters.post {
+                val layoutManager = binding.rvFilters.layoutManager as LinearLayoutManager
+                val currentPosition = layoutManager.findFirstVisibleItemPosition()
+                if (currentPosition == RecyclerView.NO_POSITION) return@post
+
+                val targetPosition = filterAdapter.findClosestPosition(currentPosition, lastFilter)
+
+                val smoothScroller = object : LinearSmoothScroller(this) {
+                    override fun calculateDxToMakeVisible(view: View, snapPreference: Int): Int {
+                        val dxToStart = super.calculateDxToMakeVisible(view, -1)
+                        val dxToEnd = super.calculateDxToMakeVisible(view, 1)
+                        return (dxToStart + dxToEnd) / 2
+                    }
+                }
+                smoothScroller.targetPosition = targetPosition
+                layoutManager.startSmoothScroll(smoothScroller)
+            }
+        }
+        viewModel.loadLastFilter() // ViewModel에 마지막 필터 로드를 요청합니다.
     }
 
     private fun setupFilterList() {
@@ -74,8 +97,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
             val smoothScroller = object : LinearSmoothScroller(this) {
                 override fun calculateDxToMakeVisible(view: View, snapPreference: Int): Int {
-                    val dxToStart = super.calculateDxToMakeVisible(view, -1) // SNAP_TO_START
-                    val dxToEnd = super.calculateDxToMakeVisible(view, 1)   // SNAP_TO_END
+                    val dxToStart = super.calculateDxToMakeVisible(view, -1)
+                    val dxToEnd = super.calculateDxToMakeVisible(view, 1)
                     return (dxToStart + dxToEnd) / 2
                 }
             }
@@ -87,14 +110,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         val snapHelper = LinearSnapHelper()
         snapHelper.attachToRecyclerView(binding.rvFilters)
 
-        val nonePosition = FilterData.entries.indexOf(FilterData.NONE)
-        val startPosition = (Integer.MAX_VALUE / 2) - ((Integer.MAX_VALUE / 2) % FilterData.entries.size) + nonePosition
+        // 2. 초기 위치를 대략적으로만 설정합니다. (정확한 위치는 ViewModel이 설정)
+        val startPosition = Integer.MAX_VALUE / 2
         layoutManager.scrollToPosition(startPosition)
 
-        binding.rvFilters.post { 
-            val centerView = snapHelper.findSnapView(layoutManager)
-            centerView?.performClick()
-        }
+        // 3. 초기 클릭 이벤트를 제거합니다.
+        // binding.rvFilters.post { ... }
 
         binding.rvFilters.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -104,6 +125,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                     val position = layoutManager.getPosition(centerView)
                     val selectedFilter = filterAdapter.getFilterItemAt(position)
                     filter.setFilter(selectedFilter.type)
+
+                    // 4. 필터가 변경될 때마다 ViewModel을 통해 저장합니다.
+                    viewModel.saveLastFilter(selectedFilter.type)
                 }
             }
         })

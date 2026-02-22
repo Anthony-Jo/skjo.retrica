@@ -42,7 +42,7 @@ class MainViewModel @Inject constructor(
     /**
      * SharedPreferences에서 마지막으로 사용한 필터를 불러와 LiveData에 설정합니다.
      */
-    private fun loadLastFilter() {
+    fun loadLastFilter() {
         val lastFilter = sharedPrefWrapper.getLastFilter()
         _lastSelectedFilter.value = lastFilter
     }

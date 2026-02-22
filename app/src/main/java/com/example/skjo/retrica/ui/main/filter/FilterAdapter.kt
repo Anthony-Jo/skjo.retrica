@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.skjo.retrica.databinding.ItemFilterBinding
+import com.example.skjo.retrica.model.FilterData
 
 /**
  * Camera Filter 변경 UI RecyclerView Adapter.
@@ -32,6 +33,31 @@ class FilterAdapter(
     fun getFilterItemAt(position: Int): FilterItem {
         val actualPosition = position % filterItems.size
         return filterItems[actualPosition]
+    }
+
+    /**
+     * 현재 위치에서 가장 가까운 목표 필터의 인덱스를 찾습니다.
+     * @param currentPosition 현재 RecyclerView의 포지션
+     * @param targetType 중앙에 위치시킬 목표 필터의 타입
+     * @return 목표 필터의 가장 가까운 포지션
+     */
+    fun findClosestPosition(currentPosition: Int, targetType: FilterData): Int {
+        val targetIndex = filterItems.indexOfFirst { it.type == targetType }
+        if (targetIndex < 0) return currentPosition // 목표 필터를 찾지 못한 경우
+
+        val itemCount = filterItems.size
+        val currentActualIndex = currentPosition % itemCount
+
+        // 순방향 거리와 역방향 거리 계산
+        val forwardDistance = (targetIndex - currentActualIndex + itemCount) % itemCount
+        val backwardDistance = itemCount - forwardDistance
+
+        // 더 가까운 쪽으로 이동할 포지션 반환
+        return if (forwardDistance <= backwardDistance) {
+            currentPosition + forwardDistance
+        } else {
+            currentPosition - backwardDistance
+        }
     }
 
     inner class FilterViewHolder(private val binding: ItemFilterBinding) : RecyclerView.ViewHolder(binding.root) {
