@@ -58,10 +58,53 @@
 - 모든 Activity 가 상속받는 부모 class
 - ViewBinding 수행
 - 상단 상태바 투명한 UI 로 적용하고 그 height 만큼 padding 적용
+```kotlin
+   /**
+     * 상태 표시줄을 투명하게 만들고, 콘텐츠를 상태 표시줄 뒤로 확장 (Edge-to-Edge)
+     */
+    private fun setTransparentStatusBar() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = Color.TRANSPARENT
+    }
+
+    /**
+     * 시스템 UI(상태 표시줄 등)가 차지하는 영역을 가져와, 해당 영역만큼 패딩 적용
+     */
+    private fun setStatusBarPadding() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.updatePadding(left = systemBars.left, top = systemBars.top, right = systemBars.right, bottom = systemBars.bottom)
+            insets
+        }
+    }
+```
 - 권한 허용 필요 안내 dialog 노출
+
 #### 1.2. `SplashActivity`
 - 앱 실행시 진입
 - permission (Camera) 체크 후 2초간 delay 후 `MainActivity` 진입
 #### 1.3 `MainActivity`
 - View 상단 CameraX Preview
+  - 카메라 및 렌더러 초기화
+  - 실시간 FPS, 현재 적용 Filter 모니터링 
 - View 하단 컨트롤 UI
+  - Front/Back Camera 전환 button 
+  - 무한 스크롤 필터 UI
+### 2. Model
+#### 2.1 `FilterType`
+- Camera filter type Enum 엔드리로 구성
+- type name, 썸네일 정의
+#### 2.2 `CameraType`
+- 전면 / 후면 카메라 타입 정의
+- 휴먼 에러 방지를 위해 열거한 카메라 타입만 받도록 함
+### 3. ViewModel
+#### 3.1 `MainViewModel`
+- `Coroutine` 사용하여 데이터 비동기 처리
+```kotlin   
+    fun saveLastFilter(filterType: FilterType) {
+        viewModelScope.launch {
+            sharedPrefWrapper.setLastFilter(filterType)
+            _currentFilter.postValue("Filter: ${filterType.name}")
+        }
+    }
+```
