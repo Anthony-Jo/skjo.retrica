@@ -7,7 +7,6 @@
     android:background="@android:color/black"
     tools:context=".ui.main.MainActivity">
 
-    <!-- CameraX의 미리보기를 표시할 View -->
     <android.opengl.GLSurfaceView
         android:id="@+id/layoutGlSurfaceView"
         android:layout_width="0dp"
@@ -17,7 +16,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 실시간 FPS(Frame Per Second)를 표시할 TextView -->
     <TextView
         android:id="@+id/tvFps"
         android:layout_width="wrap_content"
@@ -32,7 +30,6 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="FPS: 60.0" />
 
-    <!-- 필터 선택 등을 위한 UI 영역 -->
     <LinearLayout
         android:id="@+id/layoutBtn"
         android:layout_width="0dp"
@@ -43,7 +40,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutGlSurfaceView">
+        app:layout_constraintTop_toBottomOf="@+id/layoutGlSurfaceView">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvFilters"
@@ -53,5 +50,15 @@
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
     </LinearLayout>
+
+    <View
+        android:id="@+id/viewCenterIndicator"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:background="@drawable/bg_filter_selected"
+        app:layout_constraintBottom_toBottomOf="@+id/layoutBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/layoutBtn" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

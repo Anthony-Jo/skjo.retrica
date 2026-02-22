@@ -11,7 +11,10 @@ import androidx.camera.core.ViewPort
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSnapHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.example.skjo.retrica.databinding.ActivityMainBinding
+import com.example.skjo.retrica.model.FilterData
 import com.example.skjo.retrica.ui.BaseActivity
 import com.example.skjo.retrica.ui.main.filter.FilterAdapter
 import com.example.skjo.retrica.utils.GLRenderer
@@ -30,6 +33,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var filter: IFilter
     private var cameraProvider: ProcessCameraProvider? = null
+    private lateinit var filterAdapter: FilterAdapter
 
     override fun getViewBinding() = ActivityMainBinding.inflate(layoutInflater)
 
@@ -58,13 +62,36 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
 
     private fun setupFilterList() {
-
-        val adapter = FilterAdapter(this) { selectedFilter ->
-            (filter as? GLRenderer)?.setFilter(selectedFilter.type)
+        // 클릭 리스너는 이제 필터 적용이 아닌, 해당 아이템을 중앙으로 스크롤하는 역할을 합니다.
+        filterAdapter = FilterAdapter(this) { clickedPosition ->
+            binding.rvFilters.smoothScrollToPosition(clickedPosition)
         }
 
-        binding.rvFilters.adapter = adapter
-        binding.rvFilters.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        val layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvFilters.layoutManager = layoutManager
+        binding.rvFilters.adapter = filterAdapter
+
+        // 1. 아이템이 중앙에 오도록 스냅하는 SnapHelper 추가
+        val snapHelper = LinearSnapHelper()
+        snapHelper.attachToRecyclerView(binding.rvFilters)
+
+        // 2. 무한 스크롤을 위해 중간 위치에서 시작
+        val startPosition = Integer.MAX_VALUE / 2 - (Integer.MAX_VALUE / 2 % FilterData.entries.size)
+        layoutManager.scrollToPosition(startPosition)
+
+        // 3. 스크롤이 멈췄을 때만 필터를 적용하는 리스너 추가
+        binding.rvFilters.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                // 스크롤이 완전히 멈췄을 때만 필터를 적용하여 리소스 낭비를 막습니다.
+                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    val centerView = snapHelper.findSnapView(layoutManager) ?: return
+                    val position = layoutManager.getPosition(centerView)
+                    val selectedFilter = filterAdapter.getFilterItemAt(position)
+                    filter.setFilter(selectedFilter.type)
+                }
+            }
+        })
     }
 
     private fun setupCamera() {

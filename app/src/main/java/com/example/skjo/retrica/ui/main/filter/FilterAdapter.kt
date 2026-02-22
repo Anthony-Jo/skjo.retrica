@@ -11,16 +11,10 @@ import com.example.skjo.retrica.databinding.ItemFilterBinding
  */
 class FilterAdapter(
     private val context: Context,
-    private val onFilterSelected: (FilterItem) -> Unit
+    private val onItemClicked: (Int) -> Unit
 ) : RecyclerView.Adapter<FilterAdapter.FilterViewHolder>() {
 
-    private val filterItemList = mutableListOf<FilterItem>()
-
-    init {
-        filterItemList.clear()
-        filterItemList.addAll(FilterItem.getFilters())
-        notifyItemRangeChanged(0, filterItemList.size)
-    }
+    private val filterItems = FilterItem.getFilters()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FilterViewHolder {
         val binding = ItemFilterBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -28,16 +22,22 @@ class FilterAdapter(
     }
 
     override fun onBindViewHolder(holder: FilterViewHolder, position: Int) {
-        holder.bind(filterItemList[position])
+        val actualPosition = position % filterItems.size
+        holder.bind(filterItems[actualPosition])
     }
 
-    override fun getItemCount() = filterItemList.size
+    override fun getItemCount() = Integer.MAX_VALUE
+
+    fun getFilterItemAt(position: Int): FilterItem {
+        val actualPosition = position % filterItems.size
+        return filterItems[actualPosition]
+    }
 
     inner class FilterViewHolder(private val binding: ItemFilterBinding) : RecyclerView.ViewHolder(binding.root) {
         init {
             itemView.setOnClickListener {
                 if (adapterPosition != RecyclerView.NO_POSITION) {
-                    onFilterSelected(filterItemList[adapterPosition])
+                    onItemClicked(adapterPosition)
                 }
             }
         }
