@@ -20,7 +20,7 @@
 ## Link
 - [git-hub repository](https://github.com/Anthony-Jo/skjo.retrica)
 - [Confluence](https://zamake.atlassian.net/wiki/x/BQCw)
-- [PDF download]()
+- [PDF download](https://drive.google.com/file/d/1SyKS-MOdpsxE85LEAm7Ya4KZx05q9hLP/view?usp=share_link)
 
 ## App Preview
 - 개발 언어 : `Kotlin`
