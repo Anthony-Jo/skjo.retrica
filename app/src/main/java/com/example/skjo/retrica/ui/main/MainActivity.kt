@@ -90,9 +90,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         val nonePosition = FilterData.entries.indexOf(FilterData.NONE)
         val startPosition = (Integer.MAX_VALUE / 2) - ((Integer.MAX_VALUE / 2) % FilterData.entries.size) + nonePosition
         layoutManager.scrollToPosition(startPosition)
-        
+
         binding.rvFilters.post { 
-            filter.setFilter(FilterData.NONE)
+            val centerView = snapHelper.findSnapView(layoutManager)
+            centerView?.performClick()
         }
 
         binding.rvFilters.addOnScrollListener(object : RecyclerView.OnScrollListener() {
