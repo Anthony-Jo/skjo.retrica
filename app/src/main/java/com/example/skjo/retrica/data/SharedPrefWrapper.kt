@@ -30,8 +30,8 @@ class SharedPrefWrapper @Inject constructor(
         val filterName = prefs.getString(KEY_LAST_FILTER, FilterData.NONE.name)
         return try {
             FilterData.valueOf(filterName ?: FilterData.NONE.name)
-        } catch (e: IllegalArgumentException) {
-            FilterData.NONE // 저장된 이름이 enum에 없으면 NONE을 반환
+        } catch (_: IllegalArgumentException) {
+            FilterData.NONE
         }
     }
 }
