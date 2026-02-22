@@ -203,6 +203,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
 
             try {
                 provider.unbindAll()
+                /**
+                 * Preview UseCase는 렌더링할 Surface를 요청합니다(SurfaceRequest).
+                 */
                 provider.bindToLifecycle(this, cameraSelector, useCaseGroup)
             } catch (e: Exception) {
                 Log.e("MainActivity", "UseCase binding failed", e)

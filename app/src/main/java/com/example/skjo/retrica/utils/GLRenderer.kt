@@ -97,6 +97,10 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
         GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST)
 
         surfaceTexture = SurfaceTexture(textureId)
+        /**
+         * - 카메라 하드웨어에서 새로운 프레임이 생성되면, CameraX는 이 SurfaceTexture를 업데이트하고 onFrameAvailable 콜백을 발생시킵니다
+         * - onFrameAvailable 리스너는 glSurfaceView.requestRender()를 호출하여 onDrawFrame을 트리거합니다.
+         */
         surfaceTexture.setOnFrameAvailableListener { glSurfaceView.requestRender() }
     }
 
@@ -117,6 +121,9 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
         }
         lastFrameTimeNs = currentTimeNs
 
+        /**
+         *  최신 카메라 프레임을 GPU 텍스처 메모리로 가져옵니다.
+         */
         surfaceTexture.updateTexImage()
         surfaceTexture.getTransformMatrix(transformMatrix)
 
@@ -149,6 +156,9 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
         GLES20.glDisableVertexAttribArray(texCoordHandle)
     }
 
+    /**
+     * OpenGL 텍스처 ID로 생성된 SurfaceTexture로부터 Surface를 만들어 CameraX에 제공합니다.
+     */
     override val surfaceProvider = Preview.SurfaceProvider { request -> onSurfaceRequested(request) }
 
     private fun onSurfaceRequested(request: SurfaceRequest) {
