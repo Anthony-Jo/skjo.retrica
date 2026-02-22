@@ -27,7 +27,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 @AndroidEntryPoint
-class MainActivity : BaseActivity<ActivityMainBinding>() {
+class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.PerformanceMonitor {
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -45,6 +45,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
         // GLSurfaceView 및 필터(렌더러) 설정
         val renderer = GLRenderer(binding.layoutGlSurfaceView)
+        renderer.setPerformanceMonitor(this)
         filter = renderer
         binding.layoutGlSurfaceView.setEGLContextClientVersion(3) // OpenGL ES 3.0 사용
         binding.layoutGlSurfaceView.setRenderer(renderer)
@@ -58,11 +59,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         setupCamera()
     }
 
+    override fun onFpsUpdated(fps: Double) {
+        viewModel.updateFps(fps)
+    }
+
     private fun observeViewModel() {
-        viewModel.data.observe(this) {
+        viewModel.fps.observe(this) {
             binding.tvFps.text = it
         }
-        viewModel.fetchData()
 
         // 1. 마지막 필터 정보를 받아와서 초기 스크롤 위치를 설정합니다.
         viewModel.lastSelectedFilter.observe(this) { lastFilter ->

@@ -15,6 +15,18 @@ import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Renderer, IFilter {
+    private var performanceMonitor: PerformanceMonitor? = null
+    private var lastFrameTimeNs: Long = 0
+    private val frameTimes = LongArray(10) // Moving average window
+    private var frameTimeIndex = 0
+
+    interface PerformanceMonitor {
+        fun onFpsUpdated(fps: Double)
+    }
+
+    fun setPerformanceMonitor(monitor: PerformanceMonitor) {
+        performanceMonitor = monitor
+    }
 
     @Volatile
     private var currentFilterType: FilterData = FilterData.NONE
@@ -91,6 +103,20 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) { GLES20.glViewport(0, 0, width, height) }
 
     override fun onDrawFrame(gl: GL10?) {
+        val currentTimeNs = System.nanoTime()
+        if (lastFrameTimeNs > 0) {
+            val frameTimeNs = currentTimeNs - lastFrameTimeNs
+            frameTimes[frameTimeIndex % frameTimes.size] = frameTimeNs
+            frameTimeIndex++
+
+            if (frameTimeIndex > frameTimes.size) { // Avarage after 10 frames
+                val averageFrameTimeNs = frameTimes.average()
+                val fps = 1_000_000_000.0 / averageFrameTimeNs
+                performanceMonitor?.onFpsUpdated(fps)
+            }
+        }
+        lastFrameTimeNs = currentTimeNs
+
         surfaceTexture.updateTexImage()
         surfaceTexture.getTransformMatrix(transformMatrix)
 

@@ -22,8 +22,19 @@ class MainViewModel @Inject constructor(
     private val _lastSelectedFilter = MutableLiveData<FilterData>()
     val lastSelectedFilter: LiveData<FilterData> = _lastSelectedFilter
 
+    private val _fps = MutableLiveData<String>()
+    val fps: LiveData<String> = _fps
+
     init {
         loadLastFilter()
+    }
+
+    /**
+     * 렌더링 스레드에서 호출되어 FPS 값을 업데이트합니다.
+     */
+    fun updateFps(fps: Double) {
+        val fpsText = String.format("%.1f FPS", fps)
+        _fps.postValue(fpsText)
     }
 
     fun fetchData() {
