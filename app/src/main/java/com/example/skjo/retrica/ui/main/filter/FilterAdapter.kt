@@ -2,6 +2,7 @@ package com.example.skjo.retrica.ui.main.filter
 
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.skjo.retrica.databinding.ItemFilterBinding
@@ -11,7 +12,7 @@ import com.example.skjo.retrica.databinding.ItemFilterBinding
  */
 class FilterAdapter(
     private val context: Context,
-    private val onItemClicked: (Int) -> Unit
+    private val onItemClicked: (View) -> Unit // 클릭된 아이템의 View를 전달
 ) : RecyclerView.Adapter<FilterAdapter.FilterViewHolder>() {
 
     private val filterItems = FilterItem.getFilters()
@@ -37,7 +38,7 @@ class FilterAdapter(
         init {
             itemView.setOnClickListener {
                 if (adapterPosition != RecyclerView.NO_POSITION) {
-                    onItemClicked(adapterPosition)
+                    onItemClicked(itemView) // 포지션 대신 View 자체를 전달
                 }
             }
         }
