@@ -67,6 +67,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
             binding.tvFps.text = it
         }
 
+        viewModel.currentFilter.observe(this) {
+            binding.tvCurrentFilter.text = it
+        }
+
         // 1. 마지막 필터 정보를 받아와서 초기 스크롤 위치를 설정합니다.
         viewModel.lastSelectedFilter.observe(this) { lastFilter ->
             binding.rvFilters.post {
