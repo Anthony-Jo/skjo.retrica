@@ -13,10 +13,10 @@
 - [x] lifeCycle 최적화
   - [x] Camera HW
   - [x] 그외 (view, data 등)
-- [ ] 문서화 
-  - [ ] markdown (컨플루언스?) 
-  - [ ] PDF
-  - [ ] 프레젠테이션
+- [x] 문서화 
+  - [x] markdown
+  - [x] PDF
+  - [x] 프레젠테이션 준비
 ---
 ## Link
 - [git-hub repository](https://github.com/Anthony-Jo/skjo.retrica)
@@ -24,7 +24,8 @@
 - [PDF download]()
 ---
 ## App Preview
-- 앱 언어 (Language): `Kotlin`
+- 개발 언어 : `Kotlin`
+- 지원 언어 : 한국어 (`ko`)
 - 최소 SDK (Min SDK): API 24 (Android 7.0 Nougat)
 - 타겟 SDK (Target SDK): API 34 (Android 14)
 - 디자인 패턴 (Architecture):
@@ -44,3 +45,11 @@
 - 실시간 필터 파이프라인: CameraX로부터 받은 카메라 프레임(SurfaceTexture)을 OpenGL ES 텍스처로 변환하고, Fragment Shader를 통해 실시간으로 필터(Grayscale, Sepia 등)를 적용하는 렌더링 파이프라인 구축.
 - 동적 셰이더 관리: Map을 활용하여 여러 필터 셰이더 코드를 동적으로 교체 및 관리.
 - 무한 스크롤 필터 선택 UI: RecyclerView와 LinearSnapHelper를 조합하여 중앙에 필터가 스냅되는 부드러운 UI/UX 구현.
+---
+## 개발 환경 및 Tool
+- Android Studio Otter 3
+- Google Gemini 2.5
+- Device
+  - Samsung Galaxy Z Flip5 (Android 16)
+  - Samsung Galaxy S10 5G (Android 12)
+  - Samsung Galaxy A8 (2018) (Android 9)
