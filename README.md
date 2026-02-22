@@ -3,17 +3,17 @@
 
 ### TODO LIST
 - [x] App Permission logic 
-- [ ] CameraX 
+- [x] CameraX 
   - [x] Camera Preview UI
   - [x] Filter 적용 된 UI
-  - [ ] Filter 선택/변경/해제 UI
+  - [x] Filter 선택/변경/해제 UI
   - [x] OpenGL ES를 사용하여 간단한 Grayscale 셰이더 작성
 - [ ] 프레임 드랍 모니터링
-  - [ ] 실시간 모니터링 
+  - [x] 실시간 모니터링 
   - [ ] log 로 추출(?)
 - [ ] lifeCycle 최적화
   - [ ] Camera HW
-  - [ ] 그외 (view, data 등)
+  - [x] 그외 (view, data 등)
 - [ ] 문서화 
   - [ ] markdown (컨플루언스?) 
   - [ ] PDF

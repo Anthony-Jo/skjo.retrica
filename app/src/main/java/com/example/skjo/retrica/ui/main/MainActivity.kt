@@ -113,12 +113,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
         val snapHelper = LinearSnapHelper()
         snapHelper.attachToRecyclerView(binding.rvFilters)
 
-        // 2. 초기 위치를 대략적으로만 설정합니다. (정확한 위치는 ViewModel이 설정)
         val startPosition = Integer.MAX_VALUE / 2
         layoutManager.scrollToPosition(startPosition)
-
-        // 3. 초기 클릭 이벤트를 제거합니다.
-        // binding.rvFilters.post { ... }
 
         binding.rvFilters.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -146,9 +142,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), GLRenderer.Performance
 
     private fun bindPreview() {
         val provider = cameraProvider ?: return
-
         val preview: Preview = Preview.Builder().build()
-
         val cameraSelector: CameraSelector = CameraSelector.Builder()
             .requireLensFacing(CameraSelector.LENS_FACING_BACK)
             .build()
