@@ -23,15 +23,6 @@ class SplashActivity : BaseActivity<ActivitySplashBinding>() {
     private var handler: Handler? = null
 
     /**
-     * 필수 권한 list
-     */
-    private val requiredPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        arrayOf(Manifest.permission.CAMERA)
-    } else {
-        arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-    }
-
-    /**
      * - 모든 필수 권한 허용됨: start main activity
      * - 하나라도 허용되지 않음: 권한 요청 안내 popup 노출
      */
@@ -67,21 +58,12 @@ class SplashActivity : BaseActivity<ActivitySplashBinding>() {
     }
 
     private fun checkPermissionsAndProceed() {
-        if (hasAllPermissions()) {
+        if (hasAllPermissions) {
             // 모든 권한이 있다면, 메인 액티비티로 이동합니다.
             startMainWithDelay()
         } else {
             // 권한이 하나라도 없다면, 권한을 요청합니다.
             permissionLauncher.launch(requiredPermissions)
-        }
-    }
-
-    /**
-     * 필수 권한 여부 check
-     */
-    private fun hasAllPermissions(): Boolean {
-        return requiredPermissions.all {
-            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
     }
 

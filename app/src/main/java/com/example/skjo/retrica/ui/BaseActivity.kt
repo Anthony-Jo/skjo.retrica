@@ -1,18 +1,23 @@
 package com.example.skjo.retrica.ui
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.result.ActivityResultLauncher
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.viewbinding.ViewBinding
+import com.example.skjo.retrica.ui.splash.SplashActivity
 
 abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
 
@@ -89,5 +94,29 @@ abstract class BaseActivity<B : ViewBinding> : AppCompatActivity() {
         val uri = Uri.fromParts("package", packageName, null)
         intent.data = uri
         launcher?.launch(intent) ?: run { startActivity(intent) }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        checkPermission()
+    }
+    val requiredPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        arrayOf(Manifest.permission.CAMERA)
+    } else {
+        arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    }
+
+    val hasAllPermissions: Boolean
+        get() = requiredPermissions.all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+        }
+
+    private fun checkPermission() {
+        if (this is SplashActivity) {
+            return
+        }
+        if (!hasAllPermissions) {
+            showPermissionDeniedDialog()
+        }
     }
 }

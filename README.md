@@ -53,5 +53,15 @@
   - Samsung Galaxy S10 5G (Android 12)
   - Samsung Galaxy A8 (2018) (Android 9)
 ## 코드 리뷰 (Code Review)
-
 ### 1. View
+#### 1.1. `BaseActivity`
+- 모든 Activity 가 상속받는 부모 class
+- ViewBinding 수행
+- 상단 상태바 투명한 UI 로 적용하고 그 height 만큼 padding 적용
+- 권한 허용 필요 안내 dialog 노출
+#### 1.2. `SplashActivity`
+- 앱 실행시 진입
+- permission (Camera) 체크 후 2초간 delay 후 `MainActivity` 진입
+#### 1.3 `MainActivity`
+- View 상단 CameraX Preview
+- View 하단 컨트롤 UI
