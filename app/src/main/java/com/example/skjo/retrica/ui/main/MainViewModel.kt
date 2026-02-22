@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skjo.retrica.data.SharedPrefWrapper
 import com.example.skjo.retrica.model.CameraLensFacingType
-import com.example.skjo.retrica.model.FilterData
+import com.example.skjo.retrica.model.FilterType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,8 +19,8 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
 
     // 마지막으로 선택된 필터를 UI에 전달하기 위한 LiveData
-    private val _lastSelectedFilter = MutableLiveData<FilterData>()
-    val lastSelectedFilter: LiveData<FilterData> = _lastSelectedFilter
+    private val _lastSelectedFilter = MutableLiveData<FilterType>()
+    val lastSelectedFilter: LiveData<FilterType> = _lastSelectedFilter
 
     private val _fps = MutableLiveData<String>()
     val fps: LiveData<String> = _fps
@@ -61,7 +61,7 @@ class MainViewModel @Inject constructor(
     /**
      * 사용자가 선택한 필터를 SharedPreferences에 저장합니다.
      */
-    fun saveLastFilter(filterType: FilterData) {
+    fun saveLastFilter(filterType: FilterType) {
         viewModelScope.launch {
             sharedPrefWrapper.setLastFilter(filterType)
             _currentFilter.postValue("Filter: ${filterType.name}")

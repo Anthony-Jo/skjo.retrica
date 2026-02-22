@@ -1,9 +1,7 @@
 package com.example.skjo.retrica.data
 
 import android.content.SharedPreferences
-import androidx.camera.core.Camera
-import androidx.camera.core.CameraSelector
-import com.example.skjo.retrica.model.FilterData
+import com.example.skjo.retrica.model.FilterType
 import javax.inject.Inject
 import javax.inject.Singleton
 import androidx.core.content.edit
@@ -22,7 +20,7 @@ class SharedPrefWrapper @Inject constructor(
     /**
      * 마지막으로 사용한 필터 타입을 저장합니다.
      */
-    fun setLastFilter(filterType: FilterData) {
+    fun setLastFilter(filterType: FilterType) {
         prefs.edit { putString(KEY_LAST_FILTER, filterType.name) }
     }
 
@@ -30,12 +28,12 @@ class SharedPrefWrapper @Inject constructor(
      * 마지막으로 사용한 필터 타입을 불러옵니다.
      * @return 저장된 FilterType. 없으면 기본값으로 NONE을 반환합니다.
      */
-    fun getLastFilter(): FilterData {
-        val filterName = prefs.getString(KEY_LAST_FILTER, FilterData.NONE.name)
+    fun getLastFilter(): FilterType {
+        val filterName = prefs.getString(KEY_LAST_FILTER, FilterType.NONE.name)
         return try {
-            FilterData.valueOf(filterName ?: FilterData.NONE.name)
+            FilterType.valueOf(filterName ?: FilterType.NONE.name)
         } catch (_: IllegalArgumentException) {
-            FilterData.NONE
+            FilterType.NONE
         }
     }
 

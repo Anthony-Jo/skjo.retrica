@@ -7,7 +7,7 @@ import android.opengl.GLSurfaceView
 import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceRequest
 import androidx.core.content.ContextCompat
-import com.example.skjo.retrica.model.FilterData
+import com.example.skjo.retrica.model.FilterType
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -29,7 +29,7 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
     }
 
     @Volatile
-    private var currentFilterType: FilterData = FilterData.NONE
+    private var currentFilterType: FilterType = FilterType.NONE
 
     private val vertices = floatArrayOf(-1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f)
     private val textureVertices = floatArrayOf(0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f)
@@ -37,7 +37,7 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
     private var vertexBuffer: FloatBuffer
     private var textureBuffer: FloatBuffer
 
-    private val programs = mutableMapOf<FilterData, Int>()
+    private val programs = mutableMapOf<FilterType, Int>()
     private var positionHandle = 0
     private var texCoordHandle = 0
     private var textureHandle = 0
@@ -69,12 +69,12 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
                 "}"
 
     private val fragmentShaderBodies = mapOf(
-        FilterData.NONE to "gl_FragColor = color;",
-        FilterData.GRAYSCALE to "float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));\n    gl_FragColor = vec4(gray, gray, gray, 1.0);",
-        FilterData.SEPIA to "vec3 sepiaColor = vec3(dot(color.rgb, vec3(0.393, 0.769, 0.189)), dot(color.rgb, vec3(0.349, 0.686, 0.168)), dot(color.rgb, vec3(0.272, 0.534, 0.131)));\n    gl_FragColor = vec4(sepiaColor, 1.0);",
-        FilterData.INVERT to "gl_FragColor = vec4(1.0 - color.r, 1.0 - color.g, 1.0 - color.b, 1.0);",
-        FilterData.VIGNETTE to "float d = distance(v_TexCoord, vec2(0.5, 0.5));\n    float vignette = smoothstep(0.8, 0.4, d);\n    gl_FragColor = vec4(color.rgb * vignette, 1.0);",
-        FilterData.POSTERIZE to "float numColors = 8.0;\n    gl_FragColor = vec4(floor(color.r * numColors) / numColors, floor(color.g * numColors) / numColors, floor(color.b * numColors) / numColors, 1.0);"
+        FilterType.NONE to "gl_FragColor = color;",
+        FilterType.GRAYSCALE to "float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));\n    gl_FragColor = vec4(gray, gray, gray, 1.0);",
+        FilterType.SEPIA to "vec3 sepiaColor = vec3(dot(color.rgb, vec3(0.393, 0.769, 0.189)), dot(color.rgb, vec3(0.349, 0.686, 0.168)), dot(color.rgb, vec3(0.272, 0.534, 0.131)));\n    gl_FragColor = vec4(sepiaColor, 1.0);",
+        FilterType.INVERT to "gl_FragColor = vec4(1.0 - color.r, 1.0 - color.g, 1.0 - color.b, 1.0);",
+        FilterType.VIGNETTE to "float d = distance(v_TexCoord, vec2(0.5, 0.5));\n    float vignette = smoothstep(0.8, 0.4, d);\n    gl_FragColor = vec4(color.rgb * vignette, 1.0);",
+        FilterType.POSTERIZE to "float numColors = 8.0;\n    gl_FragColor = vec4(floor(color.r * numColors) / numColors, floor(color.g * numColors) / numColors, floor(color.b * numColors) / numColors, 1.0);"
     )
 
     init {
@@ -123,7 +123,7 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
 
-        val program = programs[currentFilterType] ?: programs[FilterData.NONE] ?: return
+        val program = programs[currentFilterType] ?: programs[FilterType.NONE] ?: return
         GLES20.glUseProgram(program)
 
         positionHandle = GLES20.glGetAttribLocation(program, "a_Position")
@@ -157,7 +157,7 @@ class GLRenderer(private val glSurfaceView: GLSurfaceView) : GLSurfaceView.Rende
         request.provideSurface(surface, ContextCompat.getMainExecutor(glSurfaceView.context)) {}
     }
 
-    override fun setFilter(type: FilterData) {
+    override fun setFilter(type: FilterType) {
         glSurfaceView.queueEvent {
             currentFilterType = type
         }

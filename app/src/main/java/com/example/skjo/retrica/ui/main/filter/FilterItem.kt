@@ -1,15 +1,15 @@
 package com.example.skjo.retrica.ui.main.filter
 
-import com.example.skjo.retrica.model.FilterData
+import com.example.skjo.retrica.model.FilterType
 
 data class FilterItem(
     val name: Int,
-    val type: FilterData,
+    val type: FilterType,
     val thumbnail: Int
 ) {
     companion object {
         fun getFilters(): List<FilterItem> {
-            return FilterData.entries.map {
+            return FilterType.entries.map {
                 FilterItem(
                     name = it.title,
                     type = it,

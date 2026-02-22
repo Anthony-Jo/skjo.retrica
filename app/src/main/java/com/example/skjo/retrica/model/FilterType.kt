@@ -5,7 +5,7 @@ import com.example.skjo.retrica.R
 /**
  * 필터의 종류를 정의하는 열거형 클래스.
  */
-enum class FilterData(val title: Int, val thumbnail: Int) {
+enum class FilterType(val title: Int, val thumbnail: Int) {
     /**
      * 원본
      */
